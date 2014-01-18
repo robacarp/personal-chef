@@ -1,0 +1,7 @@
+<%=
+  str  = @record["name"].nil? ? "@" : @record["name"]
+  str += "  "
+  str += @record["ttl"].nil? ? "" : @record["ttl"].to_s
+  str += "  IN  CNAME  "
+  str += @record["value"]
+-%>

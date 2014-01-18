@@ -1,0 +1,9 @@
+<%=
+  str  = @record["name"].nil? ? "@" : @record["name"]
+  str += "  "
+  str += @record["ttl"].nil? ? "" : @record["ttl"].to_s
+  str += "  IN  MX  "
+  str += @record["priority"].to_s
+  str += "  "
+  str += @record["value"]
+-%>

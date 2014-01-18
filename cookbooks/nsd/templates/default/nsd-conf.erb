@@ -1,0 +1,15 @@
+server:
+  logfile: "/var/log/nsd.log"
+  username: nsd
+  pidfile: "/var/run/nsd/nsd.pid"
+
+remote-control:
+  control-enable: yes
+  control-interface: 127.0.0.1
+  control-port: 8952
+
+<% @zones.each do |zone| %>
+zone:
+  name: <%= zone["domain"] %>
+  zonefile: /etc/nsd/zones/<%= zone["file_name"] %>
+<% end %>

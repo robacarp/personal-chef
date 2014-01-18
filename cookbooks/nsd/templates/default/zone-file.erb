@@ -1,0 +1,19 @@
+$ORIGIN <%= @zone['domain'] %>
+$TTL <%= @zone['ttl'] %>
+
+@ IN SOA <%= @zone['soa']['nameserver'] %> <%= @zone['soa']['postmaster'] %> (
+           <%= @zone['soa']['serial'] %>
+           <%= @zone['soa']['refresh'] %>
+           <%= @zone['soa']['retry'] %>
+           <%= @zone['soa']['expire'] %>
+           <%= @zone['soa']['ttl'] %>
+         )
+
+<% @zone['records'].each do |record| %>
+<%= render "records/#{record['type'].downcase}-record.erb", 
+           :variables => {
+             :record => record,
+             :domain => @zone['domain']
+           }
+%>
+<% end %>

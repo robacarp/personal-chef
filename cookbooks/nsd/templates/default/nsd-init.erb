@@ -1,0 +1,69 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          nsd
+# Required-Start:    $syslog $remote_fs
+# Required-Stop:     $syslog $remote_fs
+# Should-Start:      $local_fs
+# Should-Stop:       $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start NSD3
+# Description:       Provides an authoritative only Name Server Daemon.
+### END INIT INFO
+
+install_path="/usr/local/sbin/nsd-control"
+
+if test \! -f /etc/nsd/nsd.conf; then
+    echo "Missing /etc/nsd/nsd.conf configuration file."
+    exit 1
+fi
+
+if test \! -f $install_path; then
+  echo "Expected nsd to live at $install_path, but it wasn't found."
+  exit 2
+fi
+
+case "$1" in
+    start)
+        echo "Starting nsd..."
+        $install_path start
+        ret=$?
+        ;;
+    stop)
+        echo "Stopping nsd..."
+        $install_path stop
+        ret=$?
+        ;;
+    reload|rebuild|force-reload)
+        echo "Building nsd zones..."
+        $install_path reload
+        ret=$?
+        ;;
+    restart)
+        echo "Restarting nsd..."
+        $install_path stop && $install_path start
+        ret=$?
+        ;;
+    status)
+        $install_path status
+        ret=$?
+        ;;
+    notify)
+        echo "Notifying nsd slaves..."
+        $install_path notify
+        ret=$?
+        ;;
+    update)
+        echo "Updating nsd slave zones..."
+        $install_path update
+        ret=$?
+        ;;
+    *)
+        echo "Usage: /etc/init.d/nsd {start, stop, reload, rebuild, force-reload, restart, notify, update}" >&2
+        exit 3
+        ;;
+esac
+echo "nsd"
+
+exit $ret
+
