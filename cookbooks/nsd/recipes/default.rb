@@ -107,7 +107,7 @@ template '/etc/nsd/nsd.conf' do
     :zones => zones
   )
 
-  notifies :reload, resources(:service => "nsd"), :delayed
+  notifies :reload, "service[nsd]", :delayed
 end
 
 directory "/etc/nsd/zones" do
