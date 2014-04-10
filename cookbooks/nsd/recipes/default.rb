@@ -78,19 +78,6 @@ template "/etc/init.d/nsd" do
   action :create
 end
 
-service "nsd" do
-  supports(
-    start: true,
-    stop: true,
-    restart: true,
-    reload: true,
-    notify: true,
-    upload: true
-  )
-
-  action :enable
-end
-
 zones = []
 data_bag("dns").each do |item|
   zones.push data_bag_item("dns",item)
@@ -114,6 +101,19 @@ directory "/etc/nsd/zones" do
   action :create
   mode 0755
   recursive true
+end
+
+service "nsd" do
+  supports(
+    start: true,
+    stop: true,
+    restart: true,
+    reload: true,
+    notify: true,
+    upload: true
+  )
+
+  action [:enable, :start]
 end
 
 zones.each do |zone|
