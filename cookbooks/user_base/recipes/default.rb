@@ -8,6 +8,7 @@ users.each_with_index do |user, i|
     action :create
     username user['id']
     password user['password']
+    shell user['shell'] || '/bin/bash'
     home user['home']
     uid user['uid']
   end
