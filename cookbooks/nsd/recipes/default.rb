@@ -6,30 +6,17 @@ packages.each do |p|
   end
 end
 
-directory '/root/src' do
-  action :create
-end
+directory '/root/src'
 
 local_path = Chef::Config[:file_cache_path]
 tar_path = "#{local_path}/#{node[:nsd][:tar]}"
 untar_path = "#{local_path}/#{node[:nsd][:basename]}"
 
-user 'nsd' do
-  system true
-  shell '/bin/false'
-  home '/home/nsd'
-end
-
-group 'nsd' do
-  system true
-  members 'nsd'
-end
-
 remote_file "nsd source" do
   source node[:nsd][:url]
   path tar_path
+
   action :create_if_missing
-  notifies :run, "bash[untar]", :immediately
 end
 
 bash "untar" do
@@ -38,8 +25,6 @@ bash "untar" do
     tar xzf #{node[:nsd][:tar]}
   SH
 
-  notifies :run, "bash[configure-compile]", :immediately
-  action :nothing
 end
 
 bash "configure-compile" do
@@ -50,14 +35,17 @@ bash "configure-compile" do
     make install
   SH
 
-  notifies :run, "bash[generate-keys]"
-  action :nothing
 end
 
-bash "generate-keys" do
-  code "/usr/local/sbin/nsd-control-setup"
+user 'nsd' do
+  system true
+  shell '/bin/false'
+  home '/home/nsd'
+end
 
-  action :nothing
+group 'nsd' do
+  system true
+  members 'nsd'
 end
 
 directory "/var/db"
@@ -72,11 +60,7 @@ directory "/var/run/nsd" do
   group 'nsd'
 end
 
-template "/etc/init.d/nsd" do
-  source "nsd-init.erb"
-  mode "0755"
-  action :create
-end
+execute "/usr/local/sbin/nsd-control-setup"
 
 zones = []
 data_bag("dns").each do |item|
@@ -93,14 +77,33 @@ template '/etc/nsd/nsd.conf' do
   variables(
     :zones => zones
   )
-
-  notifies :reload, "service[nsd]", :delayed
 end
 
 directory "/etc/nsd/zones" do
   action :create
   mode 0755
   recursive true
+end
+
+zones.each do |zone|
+  template "/etc/nsd/zones/#{zone["file_name"]}" do
+    action :create
+    source 'zone-file.erb'
+    owner 'nsd'
+    group 'nsd'
+    mode 0640
+
+    variables(
+      :zone => zone
+    )
+
+  end
+end
+
+template "/etc/init.d/nsd" do
+  source "nsd-init.erb"
+  mode "0755"
+  action :create
 end
 
 service "nsd" do
@@ -116,18 +119,10 @@ service "nsd" do
   action [:enable, :start]
 end
 
-zones.each do |zone|
-  template "/etc/nsd/zones/#{zone["file_name"]}" do
-    action :create
-    source 'zone-file.erb'
-    owner 'nsd'
-    group 'nsd'
-    mode 0640
-
-    variables(
-      :zone => zone
-    )
-
-    notifies :reload, resources(:service => "nsd"), :delayed
-  end
-end
+# execute '/etc/init.d/nsd start' do
+#   ignore_failure true
+# end
+# 
+# execute '/etc/init.d/nsd start' do
+#   ignore_failure true
+# end
