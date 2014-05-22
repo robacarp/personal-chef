@@ -6,6 +6,7 @@ end
 users.each_with_index do |user, i|
   user user['id'] do
     action :create
+    supports manage_home: true
     username user['id']
     password user['password']
     shell user['shell'] || '/bin/bash'
@@ -23,6 +24,8 @@ users.each_with_index do |user, i|
 
   directory "#{user['home']}/.ssh" do
     recursive true
+    owner user['uid']
+    group user['gid']
   end
 
   public_keys = ""
