@@ -7,6 +7,10 @@ remote-control:
   control-enable: yes
   control-interface: 127.0.0.1
   control-port: 8952
+  server-key-file: "/etc/nsd/nsd_server.key"
+  server-cert-file: "/etc/nsd/nsd_server.pem"
+  control-key-file: "/etc/nsd/nsd_control.key"
+  control-cert-file: "/etc/nsd/nsd_control.pem"
 
 <% @zones.each do |zone| %>
 zone:

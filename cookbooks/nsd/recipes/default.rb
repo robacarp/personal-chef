@@ -6,8 +6,6 @@ packages.each do |p|
   end
 end
 
-directory '/root/src'
-
 local_path = Chef::Config[:file_cache_path]
 tar_path = "#{local_path}/#{node[:nsd][:tar]}"
 untar_path = "#{local_path}/#{node[:nsd][:basename]}"
@@ -15,8 +13,7 @@ untar_path = "#{local_path}/#{node[:nsd][:basename]}"
 remote_file "nsd source" do
   source node[:nsd][:url]
   path tar_path
-
-  action :create_if_missing
+  checksum node[:nsd][:checksum]
 end
 
 bash "untar" do
@@ -25,16 +22,37 @@ bash "untar" do
     tar xzf #{node[:nsd][:tar]}
   SH
 
+  not_if { File.exist? "#{local_path}/#{node[:nsd][:basename]}" }
+  notifies :run, 'execute[stop nsd]', :immediately
+end
+
+execute 'stop nsd' do
+  command 'nsd-control stop'
+  action :nothing
+  only_if { Dir['/var/run/nsd/*.pid'].any? }
 end
 
 bash "configure-compile" do
   code <<-SH
     cd #{untar_path}
+    touch configure-compile-run
     ./configure && \
     make && \
     make install
   SH
 
+  creates "#{untar_path}/nsd"
+  notifies :run, 'bash[nsd control setup]', :immediately
+end
+
+bash 'nsd control setup' do
+  code <<-SH
+    nsd-control-setup
+    touch #{local_path}/control-setup-ran
+  SH
+
+  creates '/etc/nsd/nsd_control.pem'
+  action :nothing
 end
 
 user 'nsd' do
@@ -60,7 +78,11 @@ directory "/var/run/nsd" do
   group 'nsd'
 end
 
-execute "/usr/local/sbin/nsd-control-setup"
+template "/etc/init.d/nsd" do
+  source "nsd-init.erb"
+  mode "0755"
+  action :create
+end
 
 zones = []
 data_bag("dns").each do |item|
@@ -77,6 +99,13 @@ template '/etc/nsd/nsd.conf' do
   variables(
     :zones => zones
   )
+
+  notifies :run, 'execute[reload_nsd]', :delayed
+end
+
+execute 'reload_nsd' do
+  command 'nsd-control reload'
+  action :nothing
 end
 
 directory "/etc/nsd/zones" do
@@ -97,13 +126,8 @@ zones.each do |zone|
       :zone => zone
     )
 
+    notifies :run, 'execute[reload_nsd]', :delayed
   end
-end
-
-template "/etc/init.d/nsd" do
-  source "nsd-init.erb"
-  mode "0755"
-  action :create
 end
 
 service "nsd" do
@@ -118,11 +142,3 @@ service "nsd" do
 
   action [:enable, :start]
 end
-
-# execute '/etc/init.d/nsd start' do
-#   ignore_failure true
-# end
-# 
-# execute '/etc/init.d/nsd start' do
-#   ignore_failure true
-# end

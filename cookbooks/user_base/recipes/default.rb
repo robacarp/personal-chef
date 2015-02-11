@@ -41,9 +41,6 @@ users.each_with_index do |user, i|
     end
   end
 
-  # mayhaps allow some sort of data-bag based public key?
-  # file "#{user['home']}/.ssh/authorized_keys" do
-  # end
 end
 
 sudoers = users.select {|u| u['groups'].include? "sudo"}
