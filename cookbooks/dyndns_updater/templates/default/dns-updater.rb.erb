@@ -1,0 +1,75 @@
+#!/usr/local/bin/ruby
+
+class DynDnsWriter
+  ZONE            = '<%= @zone %>'
+  TEMPLATE_FILE   = "#{ZONE}.zonefile.template"
+  OUTPUT_FILE     = "/etc/nsd/zones/#{ZONE}.zone"
+  DYNAMIC_ADDRESS = "#{ZONE}.dyndns.status"
+  LAST_ADDRESS    = "#{ZONE}.dyndns.last"
+
+  attr_reader :ip_address
+  attr_reader :last_ip_address
+
+  def self.run
+    ddw = DynDnsWriter.new
+    ddw.run
+  end
+
+  def run
+    return unless need_write?
+    puts "Good morning! DynDnsWriter reporting in for #{ZONE}."
+    puts "Home is reported at #{ip_address}"
+    puts "Last time, home was at #{last_ip_address}."
+    puts "Seems like it needs updating."
+    return unless write_zone
+    return unless safe_to_reload
+    reload_server
+
+    puts "\n\nThis is ddw, signing off. 73"
+  end
+
+  def initialize
+    @ip_address = File.read(DYNAMIC_ADDRESS).strip
+    @last_ip_address = nil
+  end
+
+  def need_write?
+    return true unless File.exist? LAST_ADDRESS
+    @last_ip_address = File.read(LAST_ADDRESS).strip
+    return true unless @last_ip_address == @ip_address
+  end
+
+  def write_zone
+    return false unless File.exist? TEMPLATE_FILE
+    require 'erb'
+
+    template = File.read(TEMPLATE_FILE)
+
+    File.open(OUTPUT_FILE, 'w') do |f|
+      f.puts ERB.new(template).result( binding )
+    end
+
+    File.open(LAST_ADDRESS, 'w') do |f|
+      f.puts @ip_address
+    end
+
+    true
+  end
+
+  def safe_to_reload
+    `nsd-checkzone #{ZONE} #{OUTPUT_FILE}`
+    $? == 0
+  end
+
+  def reload_server
+    puts "reloading nsd"
+    puts `service nsd reload`
+    if $? == 0
+      puts 'success'
+    else
+      puts 'failure'
+    end
+  end
+end
+
+DynDnsWriter.run
