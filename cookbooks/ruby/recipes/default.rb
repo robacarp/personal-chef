@@ -1,6 +1,6 @@
 include_recipe 'apt'
 
-ruby_installed = 'ruby -v | grep 2.0.0p247'
+ruby_installed = "ruby -v | grep #{ node[:ruby][:version] }"
 
 %w( autoconf zlib1g-dev libssl-dev libffi-dev libxml2-dev libncurses-dev libreadline-dev libyaml-0-2 libyaml-dev ).each do |pkg|
   package pkg do
