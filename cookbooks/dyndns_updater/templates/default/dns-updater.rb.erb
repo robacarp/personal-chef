@@ -2,16 +2,17 @@
 
 class DynDnsWriter
   ZONE            = '<%= @zone %>'
-  TEMPLATE_FILE   = "#{ZONE}.zonefile.template"
+  BASE_DIR        = '<%= @dir %>'
+  TEMPLATE_FILE   = "#{BASE_DIR}/#{ZONE}.zonefile.template"
   OUTPUT_FILE     = "/etc/nsd/zones/#{ZONE}.zone"
-  DYNAMIC_ADDRESS = "#{ZONE}.dyndns.status"
-  LAST_ADDRESS    = "#{ZONE}.dyndns.last"
+  DYNAMIC_ADDRESS = "#{BASE_DIR}/#{ZONE}.dyndns.status"
+  LAST_ADDRESS    = "#{BASE_DIR}/#{ZONE}.dyndns.last"
 
   attr_reader :ip_address
   attr_reader :last_ip_address
 
   def self.run
-    ddw = DynDnsWriter.new
+    return unless ddw = DynDnsWriter.new
     ddw.run
   end
 
@@ -29,6 +30,7 @@ class DynDnsWriter
   end
 
   def initialize
+    return false unless File.exist? DYNAMIC_ADDRESS
     @ip_address = File.read(DYNAMIC_ADDRESS).strip
     @last_ip_address = nil
   end
@@ -45,6 +47,8 @@ class DynDnsWriter
 
     template = File.read(TEMPLATE_FILE)
 
+    puts "writing to #{OUTPUT_FILE}"
+
     File.open(OUTPUT_FILE, 'w') do |f|
       f.puts ERB.new(template).result( binding )
     end
@@ -57,7 +61,7 @@ class DynDnsWriter
   end
 
   def safe_to_reload
-    `nsd-checkzone #{ZONE} #{OUTPUT_FILE}`
+    `/usr/local/sbin/nsd-checkzone #{ZONE} #{OUTPUT_FILE}`
     $? == 0
   end
 
