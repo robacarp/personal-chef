@@ -3,49 +3,25 @@ data_bag("users").each do |user|
   users.push data_bag_item("users", user).to_hash
 end
 
+options = [
+  :uid, :username, :password, :shell,
+  :home_path, :public_key, :private_key,
+  :authorized_key_url, :authorized_keys,
+  :create_home, :create_group, :system_account
+]
+
 users.each_with_index do |user, i|
-  user user['id'] do
-    action :create
-    supports manage_home: true
-    username user['id']
-    password user['password']
-    shell user['shell'] || '/bin/bash'
-    home user['home']
-    uid user['uid']
-  end
 
-  group user['uid'] do
-    action :create
-    append false
-    members user['id']
-    gid user['gid']
-    group_name user['id']
-  end
-
-  directory "#{user['home']}/.ssh" do
-    recursive true
-    owner user['uid']
-    group user['gid']
-  end
-
-  public_keys = ""
-  if user['public_key_url']
-    remote_file "#{user['home']}/.ssh/authorized_keys" do
-      source user['public_key_url']
-      checksum user['checksum'] if user['checksum']
-
-      action :create_if_missing
-      owner user['uid']
-      group user['gid']
-      backup false
+  user_base_pc_user user[:id] do
+    options.each do |option|
+      if user[option.to_s] && respond_to?(option)
+        send option, user[option]
+      end
     end
   end
 
+  sudoers << user if u['groups'].include? 'sudo'
 end
-
-sudoers = users.select {|u| u['groups'].include? "sudo"}
-               .map    {|u| u['id'] }
-               .join(',')
 
 group "sudo" do
   append true
