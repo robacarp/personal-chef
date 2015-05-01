@@ -10,17 +10,19 @@ options = [
   :create_home, :create_group, :system_account
 ]
 
+sudoers = []
+
 users.each_with_index do |user, i|
 
-  user_base_pc_user user[:id] do
+  user_base_pc_user user['id'] do
     options.each do |option|
       if user[option.to_s] && respond_to?(option)
-        send option, user[option]
+        send option, user[option.to_s]
       end
     end
   end
 
-  sudoers << user if u['groups'].include? 'sudo'
+  sudoers << user['username'] if user['groups'].include? 'sudo'
 end
 
 group "sudo" do

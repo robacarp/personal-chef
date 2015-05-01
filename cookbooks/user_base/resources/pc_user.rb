@@ -4,7 +4,8 @@ default_action :create
 stringable = [String, Symbol]
 boolean = [TrueClass, FalseClass]
 
-attribute :uid
+attribute :uid,                kind_of: Numeric
+attribute :gid,                kind_of: Numeric
 attribute :username,           kind_of: stringable, required: true, name_attribute: true
 attribute :password,           kind_of: String, default: ''
 attribute :shell,              kind_of: String, default: '/bin/bash'

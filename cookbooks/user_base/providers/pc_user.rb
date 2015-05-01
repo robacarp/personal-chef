@@ -11,19 +11,19 @@ action :create do
     uid state.uid if state.uid
 
     supports manage_home: true
-    username state.username.to_s
+    username state.username
     password state.password
     shell state.shell
     home home_dir if state.create_home
   end
 
   if state.create_group
-    group user['uid'] do
+    group state.uid do
       action :create
       append false
-      members user['id']
-      gid user['gid']
-      group_name user['id']
+      members state.username
+      gid state.gid if state.gid
+      group_name state.username
     end
   end
 
@@ -31,6 +31,7 @@ action :create do
 
     directory "#{home_dir}/.ssh" do
       recursive true
+      owner state.username
     end
 
     if state.public_key
@@ -40,6 +41,7 @@ action :create do
         action :create
 
         mode 0600
+        owner state.username
         content state.public_key
       end
     end
@@ -51,6 +53,7 @@ action :create do
         action :create
 
         mode 0600
+        owner state.username
         content state.private_key
       end
     end
@@ -61,6 +64,7 @@ action :create do
         sensitive true
         backup false
         mode 0600
+        owner state.username
 
         content Array(state.authorized_keys).join("\n")
       end
@@ -72,6 +76,7 @@ action :create do
         sensitive true
         backup false
         mode 0600
+        owner state.username
 
         source state.authorized_key_url
       end
