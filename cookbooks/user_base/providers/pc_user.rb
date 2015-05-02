@@ -10,15 +10,22 @@ action :create do
     action :create
     uid state.uid if state.uid
 
-    supports manage_home: true
+    supports manage_home: true if state.manage_home
     username state.username
     password state.password
     shell state.shell
     home home_dir if state.create_home
   end
 
+  if state.create_home
+    directory home_dir do
+      owner state.username
+      group state.username if state.create_group
+    end
+  end
+
   if state.create_group
-    group state.uid do
+    group state.username do
       action :create
       append false
       members state.username
@@ -40,8 +47,9 @@ action :create do
         backup false
         action :create
 
-        mode 0600
+        mode 0644
         owner state.username
+        group state.username if state.create_group
         content state.public_key
       end
     end
@@ -54,6 +62,7 @@ action :create do
 
         mode 0600
         owner state.username
+        group state.username if state.create_group
         content state.private_key
       end
     end

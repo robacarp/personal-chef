@@ -10,6 +10,7 @@ attribute :username,           kind_of: stringable, required: true, name_attribu
 attribute :password,           kind_of: String, default: ''
 attribute :shell,              kind_of: String, default: '/bin/bash'
 attribute :home_path,          kind_of: String, default: nil
+attribute :manage_home,        kind_of: boolean, default: true
 
 attribute :public_key,         kind_of: String, default: nil
 attribute :private_key,        kind_of: String, default: nil
