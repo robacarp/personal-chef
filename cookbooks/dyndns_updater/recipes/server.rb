@@ -1,3 +1,7 @@
+restricted_authorized_key = <<-KEY
+no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="cat > #{node[:dyndns][:install_path]}/#{node[:dyndns][:zone]}.dyndns.status" #{node[:dyndns][:public_key]}
+KEY
+
 directory node[:dyndns][:install_path] do
   recursive true
 end
@@ -13,39 +17,17 @@ template "#{node[:dyndns][:install_path]}/dns-updater.rb" do
   )
 end
 
-template "#{node[:dyndns][:install_path]}/#{node[:dyndns][:zone]}.zonefile.template" do
+cookbook_file "#{node[:dyndns][:install_path]}/#{node[:dyndns][:zone]}.zonefile.template" do
   source 'zonefile.template'
 end
 
-user node[:dyndns][:user] do
-  action :create
-  supports manage_home: true
+user_base_pc_user node[:dyndns][:user] do
   username node[:dyndns][:user]
   password SecureRandom.hex(rand(64))
   shell '/bin/bash'
-  home '/home/dyndns'
-end
+  create_group true
 
-group node[:dyndns][:user] do
-  action :create
-  append false
-  members node[:dyndns][:user]
-end
-
-directory "/home/#{node[:dyndns][:user]}/.ssh" do
-  recursive true
-  owner node[:dyndns][:user]
-  group node[:dyndns][:user]
-end
-
-file "/home/#{node[:dyndns][:user]}/.ssh/authorized_keys" do
-  owner node[:dyndns][:user]
-  group node[:dyndns][:user]
-  backup false
-  content <<-END
-no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="cat > #{node[:dyndns][:install_path]}/#{node[:dyndns][:zone]}.dyndns.status" #{node[:dyndns][:public_key]}
-  END
-  sensitive true
+  authorized_keys restricted_authorized_key
 end
 
 cron :dyn_updater do
@@ -54,6 +36,7 @@ cron :dyn_updater do
   user 'root'
 end
 
+# force the next cron run to update the zonefile
 file "#{node[:dyndns][:install_path]}/#{node[:dyndns][:zone]}.dyndns.last" do
   action :delete
 end

@@ -1,32 +1,25 @@
 #!/usr/local/bin/ruby
 
+require 'byebug'
+
 class DynDnsWriter
-  ZONE            = '<%= @zone %>'
-  BASE_DIR        = '<%= @dir %>'
-  TEMPLATE_FILE   = "#{BASE_DIR}/#{ZONE}.zonefile.template"
-  OUTPUT_FILE     = "/etc/nsd/zones/#{ZONE}.zone"
-  DYNAMIC_ADDRESS = "#{BASE_DIR}/#{ZONE}.dyndns.status"
-  LAST_ADDRESS    = "#{BASE_DIR}/#{ZONE}.dyndns.last"
+  ZONE            = 'robacarp.com'
+  BASE_DIR        = '.'
+  TEMPLATE_FILE   = "#{BASE_DIR}/robacarp.com.zonefile.template"
+  OUTPUT_FILE     = "./rendered_template"
+  DYNAMIC_ADDRESS = "#{BASE_DIR}/dynamic_address"
+  LAST_ADDRESS    = "#{BASE_DIR}/last_address"
 
   attr_reader :ip_address
   attr_reader :last_ip_address
 
-  attr_accessor :debug, :force_update
-
-  def self.run debug: false, force_update: false
+  def self.run
     return unless ddw = DynDnsWriter.new
-    ddw.force_update = force_update
-    ddw.debug = debug
     ddw.run
   end
 
-  def d *args
-    puts *args if debug
-  end
-
-
   def run
-    return unless need_write? || force_update
+    # return unless need_write? && !
     puts "Good morning! DynDnsWriter reporting in for #{ZONE}."
     puts "Home is reported at #{ip_address}"
     unless ip_address
@@ -35,9 +28,7 @@ class DynDnsWriter
     end
 
     puts "Last time, home was at #{last_ip_address}."
-    print "Seems like it needs updating."
-    print " (forced!)" if force_update
-    puts
+    puts "Seems like it needs updating."
     return unless write_zone
     return unless safe_to_reload
     reload_server
@@ -47,23 +38,21 @@ class DynDnsWriter
 
   def initialize
     unless File.exist? DYNAMIC_ADDRESS
-      d "No dynamic address file found, expected to find it at #{DYNAMIC_ADDRESS}"
+      puts "No dynamic address file found, expected to find it at #{DYNAMIC_ADDRESS}"
       return false
     end
     @ip_address = File.read(DYNAMIC_ADDRESS).strip
     @last_ip_address = nil
-    @force_update = false
-    @debug = false
   end
 
   def need_write?
     unless File.exist? LAST_ADDRESS
-      d "no last address found, forcing update"
+      puts "no last address found, forcing update"
       return true
     end
     @last_ip_address = File.read(LAST_ADDRESS).strip
     if @last_ip_address == @ip_address
-      d "last address matches, current. not updating"
+      puts "last address matches, current. not updating"
       false
     else
       true
@@ -78,11 +67,12 @@ class DynDnsWriter
     require 'erb'
 
     template = File.read(TEMPLATE_FILE)
-
+    rendering = ERB.new(template).result( binding )
+    debugger
     puts "writing to #{OUTPUT_FILE}"
 
     File.open(OUTPUT_FILE, 'w') do |f|
-      f.puts ERB.new(template).result( binding )
+      f.puts rendering
     end
 
     File.open(LAST_ADDRESS, 'w') do |f|
@@ -93,15 +83,15 @@ class DynDnsWriter
   end
 
   def safe_to_reload
-    `/usr/local/sbin/nsd-checkzone #{ZONE} #{OUTPUT_FILE} 2> /dev/null`
+    `/usr/local/sbin/nsd-checkzone #{ZONE} #{OUTPUT_FILE}`
     success = $? == 0
-    d "> checkzone failed" unless success
+    puts "> checkzone failed" unless success
     success
   end
 
   def reload_server
     puts "reloading nsd"
-    puts `service nsd reload 2> /dev/null`
+    puts `service nsd reload`
     if $? == 0
       puts 'success'
     else
@@ -110,8 +100,5 @@ class DynDnsWriter
   end
 end
 
-args = ARGV.join(' ')
-force = ! (args =~ /--force/).nil?
-debug = ! (args =~ /--debug/).nil?
 
-DynDnsWriter.run debug: debug, force_update: force
+DynDnsWriter.run
