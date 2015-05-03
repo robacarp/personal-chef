@@ -31,7 +31,7 @@ user_base_pc_user node[:dyndns][:user] do
 end
 
 cron :dyn_updater do
-  # minute '*/5'
+  minute '*/5'
   command "cd #{node[:dyndns][:install_path]}; /usr/local/bin/ruby #{node[:dyndns][:install_path]}/dns-updater.rb"
   user 'root'
 end
