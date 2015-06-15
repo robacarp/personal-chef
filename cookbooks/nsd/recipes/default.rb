@@ -104,7 +104,7 @@ template '/etc/nsd/nsd.conf' do
 end
 
 execute 'reload_nsd' do
-  command 'nsd-control stop && nsd-control start'
+  command 'sudo nsd-control stop && sudo nsd-control start'
   action :nothing
 end
 
