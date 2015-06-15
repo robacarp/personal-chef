@@ -1,0 +1,30 @@
+$ORIGIN robacarp.com.
+$TTL 3600
+
+@ IN SOA ns1.code2359.com. service.code2359.com. (
+           201502201656
+           86400
+           7200
+           2419200
+           3600
+         )
+
+robacarp.com.  NS  ns1.code2359.com.
+robacarp.com.  NS  ns2.code2359.com.
+@  3600  IN  A  198.58.100.225
+www  3600  IN  A  198.58.100.225
+1st  3600  IN  A  173.255.193.199
+2nd  3600  IN  A  198.58.100.225
+resume  3600  IN  A  198.58.100.225
+davinci  3600  IN  A  198.58.100.225
+home 100 IN A  <%= @ip_address %>
+w  3600  IN  A  198.58.100.225
+casey-collection  3600  IN  A  198.58.100.225
+me  3600  IN  CNAME  robacarp.github.com.
+stuffimake  3600  IN  CNAME  robacarp.github.com.
+go  3600  IN  CNAME  domains.tumblr.com.
+@  300  IN  MX  10  in1-smtp.messagingengine.com.
+@  300  IN  MX  20  in2-smtp.messagingengine.com.
+@  300  IN  TXT  "v=spf1 include:spf.messagingengine.com ~all"
+@  3600  IN  TXT  "keybase-site-verification=hOgpDWaJIhDVRTRrz_lV3_nIENuWCASPvN7coVpFKhY"
+mesmtp._domainkey  300  IN  TXT  "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC1e5jFMcjssQnfZ3rTyiH00+cDYUgbG4GoNvQVDT1XCaDzp5yyXtG4E167lTj+99uK3EE8yt0FLI3jPUMy6cb6xizuj+SHV5ZYLYo43Pb+w3p6usYVxM82c5V1hpdpeTS1wzs1rYj1lHbphoXysoMYWWukAIKaMfbOkwWQmA216QIDAQAB"
