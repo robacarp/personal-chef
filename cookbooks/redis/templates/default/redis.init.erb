@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# Simple Redis init.d script conceived to work on Linux systems
+# as it does use of the /proc filesystem.
+
+REDISPORT=6379
+NAME="redis-server"
+EXEC=/usr/local/bin/redis-server
+CLIEXEC=/usr/local/bin/redis-cli
+
+PIDFILE=/var/run/redis.pid
+CONF="/etc/redis/${REDISPORT}.conf"
+
+case "$1" in
+    start)
+        echo "starting $NAME"
+        touch $PIDFILE
+        if start-stop-daemon --start --umask 007 --pidfile $PIDFILE --exec $EXEC -- $CONF
+        then
+                echo "$NAME"
+        else
+                echo "failed"
+        fi
+        ;;
+    stop)
+        echo "stopping $NAME ($PIDFILE)"
+        if start-stop-daemon --stop --retry 10 --oknodo --pidfile $PIDFILE
+        then
+                echo "$NAME"
+        else
+                echo "failed"
+        fi
+        ;;
+    *)
+        echo "Please use start or stop as first argument"
+        ;;
+esac
