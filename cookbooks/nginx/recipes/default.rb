@@ -87,3 +87,12 @@ end
 link '/etc/nginx/sites-enabled/default' do
   to '/etc/nginx/sites-available/default'
 end
+
+service 'nginx' do
+  action [:enable, :start]
+  supports({
+    :restart => true,
+    :reload => true,
+    :status => false
+  })
+end
