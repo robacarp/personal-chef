@@ -68,16 +68,11 @@ directory '/etc/nginx/sites-enabled'
 directory '/var/log/nginx'
 
 template '/etc/nginx/nginx.conf'
+template '/etc/nginx/enable-php.conf'
 
 template '/etc/init.d/nginx' do
   source 'etc/init.d/nginx.erb'
   mode 0755
-end
-
-bash "enable init.d" do
-  code <<-SH
-    update-rc.d nginx defaults
-  SH
 end
 
 template '/etc/nginx/sites-available/default' do
