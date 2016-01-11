@@ -1,0 +1,5 @@
+name             'postgres'
+license          'All rights reserved'
+description      'Installs/Configures postgres'
+version          '0.1.0'
+depends 'apt'
