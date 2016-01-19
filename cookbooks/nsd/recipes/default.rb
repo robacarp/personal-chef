@@ -85,8 +85,14 @@ template "/etc/init.d/nsd" do
 end
 
 zones = []
+current_serial = Time.now.strftime '%Y%m%d%H%M'
+
 data_bag("dns").each do |item|
-  zones.push data_bag_item("dns",item)
+  zone = data_bag_item("dns",item)
+  if zone['soa']['serial'] == 'auto'
+    zone['soa']['serial'] = current_serial
+  end
+  zones.push zone
 end
 
 template '/etc/nsd/nsd.conf' do
