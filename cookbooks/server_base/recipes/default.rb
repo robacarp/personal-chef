@@ -5,8 +5,16 @@ packages.each do |p|
 end
 
 
-if node[:hostname]
+if node[:set_hostname]
+  puts node[:set_hostname]
+
   file '/etc/hostname' do
-    content node[:hostname]
+    content node[:set_hostname]
+    notifies :run, 'execute[set hostname]', :immediately
+  end
+
+  execute 'set hostname' do
+    command 'hostname --file /etc/hostname'
+    action :nothing
   end
 end
