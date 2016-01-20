@@ -88,7 +88,7 @@ zones = []
 current_serial = Time.now.strftime '%Y%m%d%H%M'
 
 data_bag("dns").each do |item|
-  zone = data_bag_item("dns",item)
+  zone = data_bag_item("dns",item).raw_data
   if zone['soa']['serial'] == 'auto'
     zone['soa']['serial'] = current_serial
   end
@@ -120,19 +120,10 @@ directory "/etc/nsd/zones" do
   recursive true
 end
 
-zones.each do |zone|
-  template "/etc/nsd/zones/#{zone["file_name"]}" do
-    action :create
-    source 'zone-file.erb'
-    owner 'nsd'
-    group 'nsd'
-    mode 0640
-
-    variables(
-      :zone => zone
-    )
-
+zones.each do |zone_data|
+  nsd_zonefile zone_data['file_name'] do
     notifies :run, 'execute[reload_nsd]', :delayed
+    zone zone_data
   end
 end
 

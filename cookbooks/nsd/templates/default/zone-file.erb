@@ -10,7 +10,8 @@ $TTL <%= @zone['ttl'] %>
          )
 
 <% @zone['records'].each do |record| %>
-<%= render "records/#{record['type'].downcase}-record.erb", 
+<%= render  "records/#{record['type'].downcase}-record.erb", 
+          cookbook: 'nsd',
            :variables => {
              :record => record,
              :domain => @zone['domain']

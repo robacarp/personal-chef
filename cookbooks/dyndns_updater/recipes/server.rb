@@ -17,8 +17,27 @@ template "#{node[:dyndns][:install_path]}/dns-updater.rb" do
   )
 end
 
-cookbook_file "#{node[:dyndns][:install_path]}/#{node[:dyndns][:zone]}.zonefile.template" do
-  source 'zonefile.template'
+zones = []
+data_bag("dns").each do |item|
+  zone = data_bag_item("dns",item).raw_data
+  zones << zone
+  log zone["domain"]
+end
+
+log node[:dyndns][:zone] + '.'
+
+zone_index = zones.index {|z| z["domain"] == node[:dyndns][:zone]+'.' }
+zone_data = zones[zone_index]
+zone_data['records'] << {
+  'type' => node[:dyndns][:record_type],
+  'name' => node[:dyndns][:subdomain],
+  'ttl' => node[:dyndns][:ttl],
+  'value' => '<%= @ip_address %>'
+}
+
+nsd_zonefile "#{node[:dyndns][:zone]}.zonefile.template" do
+  location node[:dyndns][:install_path]
+  zone zone_data
 end
 
 user_base_pc_user node[:dyndns][:user] do
