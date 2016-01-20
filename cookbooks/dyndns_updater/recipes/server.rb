@@ -21,10 +21,7 @@ zones = []
 data_bag("dns").each do |item|
   zone = data_bag_item("dns",item).raw_data
   zones << zone
-  log zone["domain"]
 end
-
-log node[:dyndns][:zone] + '.'
 
 zone_index = zones.index {|z| z["domain"] == node[:dyndns][:zone]+'.' }
 zone_data = zones[zone_index]
